@@ -1,17 +1,14 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import WebcamCapture from './WebcamCapture';
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
   return (
-    <div>
-      <p>Lie detection</p> 
+    <div style={{ textAlign: 'center' }}>
+      <h1>Emotion Tracker</h1>
+      <WebcamCapture />
     </div>
-    
-  )
-}
+  );
+};
 
-export default App
+export default App;
+
