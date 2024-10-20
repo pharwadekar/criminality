@@ -10,6 +10,8 @@ from collections import deque
 import asyncio
 import os
 import sounddevice as sd
+from llm import trueorfalse
+
 
 from amazon_transcribe.client import TranscribeStreamingClient
 from amazon_transcribe.handlers import TranscriptResultStreamHandler
@@ -164,6 +166,9 @@ def detect_blinking_eye_tracking_and_micro_expressions(frame):
 
     return frame, high_speed_blink, micro_expressions, face_orientation, gaze_direction
 
+os.environ['AWS_ACCESS_KEY_ID'] = 'ASIAXEU62A4RJMG7PQR4'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'hOvkzaYfo6t9tBEDgRmfQII4Ogdn10Pipe2uTLI0'
+os.environ['AWS_SESSION_TOKEN'] = 'IQoJb3JpZ2luX2VjEBAaCXVzLWVhc3QtMSJIMEYCIQCetPHA7RTPqTgWkkmQjED5G3xyvNcdDCMKCXRKsmBIggIhAOPTO7PB1qYIQsepD+WUgtuYHygwT19bLRC0T0VTECM7KpkCCHkQABoMNDkxMDMzMDY5MzQ2IgwyU8neqfz83Aeijg8q9gGs6DEpmYAwt5Iu/AOFpfOVT0RbYWS9wbp262fy6kzw3umkgF75Hq1M5sjs/AgbSUk4o6NgE0mvKNK9ro+oaffDYgoWaerddHOp067+avpDbOv5xlyBMvpOuBnJcMcbFfZwxikbend/usyQtnexfvde/T7sC3uCR86wsvbInM+B7++dIXh1OQYA8fKDx8S7411gL8udP/+pOS+CfzJ3ngyTNKuBmB8UBJOrhCe6fSuVKL+d5hhBiMCDNx79aA/Q6DMg8Bh3tuVSgn3Cwgqlyg5WDz121AyiySRxab9P9IO8o5Ys8OgEsPviwyvHTa31lN0Yywhge2IwrsrUuAY6nAEJ1fBPoIQg4LE0PDsSaBkwNNReSNvROMflE97HQZSCz/6ZhY2ALF46Dnv7peHDVdSst6cPKAi5jrtEerzx871c+8J77mZlQm34o8RYAjPbARcg0nKHOzLzutzmaTvtYefJOL3zcNVGfALbs7/L0MJrXjl6qkL33UOjWd0I9cPqJsPogTWKI+gA6TVjfDg5unMqphzlAW36ucXdZEw='  # Only if using temporary credentials
 class MyEventHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):
         results = transcript_event.transcript.results
@@ -205,6 +210,23 @@ async def basic_transcribe(audio_data):
     )
     handler = MyEventHandler(stream.output_stream)
     await asyncio.gather(write_chunks(stream, audio_data), handler.handle_events())
+
+app = Flask(__name__)
+
+@app.route('/api/process', methods=['POST'])
+def process_data():
+    data = request.get_json()
+    name = data.get('name')
+    testimonial = data.get('testimonial')
+    evidence = data.get('evidence')
+
+    if not name or not testimonial or not evidence:
+        return jsonify({'error': 'Missing data'}), 400
+
+    # Process the data
+    result = trueorfalse(name, testimonial, evidence)
+
+    return jsonify({'message': 'Data processed successfully', 'result': result}), 200
 
 @socketio.on('audio_chunk')
 def handle_audio_chunk(data):

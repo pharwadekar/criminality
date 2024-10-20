@@ -1,53 +1,57 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './InputDocument.css';
 
-const InputDocuments = () => {
-    const [selectedFile, setSelectedFile] = useState(null);
+const InputDoc = () => {
+  const [file, setFile] = useState(null);
+  const [response, setResponse] = useState(null);
 
-    const handleFileChange = (event) => {
-        setSelectedFile(event.target.files[0]);
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
+
+  const handleFileUpload = async () => {
+    if (!file) {
+      alert('Please select a file first!');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const content = e.target.result;
+      const lines = content.split('\n');
+      const name = lines[0];
+      const testimonial = lines[1];
+      const evidence = lines.slice(2).join('\n');
+
+      const data = {
+        name,
+        testimonial,
+        evidence,
+      };
+
+      try {
+        const response = await axios.post('/api/process', data, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        setResponse(response.data);
+        console.log('File processed successfully:', response.data);
+      } catch (error) {
+        console.error('Error processing file:', error);
+      }
     };
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        if (!selectedFile) {
-            alert('Please select a file first!');
-            return;
-        }
+    reader.readAsText(file);
+  };
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const text = e.target.result;
-
-            try {
-                const response = await axios.post('YOUR_BACKEND_ENDPOINT/llm', { text }, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-                console.log('File content sent successfully:', response.data);
-            } catch (error) {
-                console.error('Error sending file content:', error);
-            }
-        };
-        try {
-            reader.readAsText(selectedFile);
-        } catch (error) {
-            console.error('Error reading file:', error);
-            alert('Error reading file. Please try again.');
-        }
-    };
-
-    return (
-        <div className="container1">
-            <h2>Upload Evidence</h2>
-            <form onSubmit={handleSubmit}>
-                <input type="file" accept=".txt" onChange={handleFileChange} />
-                <button type="submit">Upload</button>
-            </form>
-        </div>
-    );
+  return (
+    <div>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleFileUpload}>Upload File</button>
+      {response && <div>Response: {JSON.stringify(response)}</div>}
+    </div>
+  );
 };
 
-export default InputDocuments;
+export default InputDoc;

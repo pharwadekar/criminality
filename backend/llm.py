@@ -103,6 +103,22 @@ def trueorfalse(name, test, evidence):
     #    print(f"{testimonial['Name']} is not lying.")
 
 
-evidence = """Case Title: State vs. James Morton Incident Date: July 20, 2023 Location: Luxe Jewelers, Downtown City 1. CCTV Footage - Description: CCTV footage from Luxe Jewelers captured on the night of the robbery. - Time: Footage shows the entrance at 7:55 PM. - Details: Two masked suspects entered the store. The taller suspect, approximately 6'2", wielded a crowbar, while the second suspect brandished a firearm. The footage is grainy but clearly shows the black boots with white soles worn by the taller suspect. - Source: Luxe Jewelers surveillance system. 2. Crowbar Analysis - Description: A crowbar recovered from the trunk of James Morton’s car. - Details: Fibers matching those from Morton’s vehicle were found on the crowbar. Glass shards embedded in the crowbar were consistent with glass from the broken display cases. - Date Collected: July 21, 2023. - Source: Evidence locker at the police station. """
-test = """I live in the same building as James Morton. On the night of July 20, 2023, I saw him coming into the building around 8:20 PM. He looked tired and wasn’t in any kind of rush. We greeted each other like usual, and I went up to my apartment. Later, when I heard about the robbery, I was surprised to hear James’ name involved. I’m sure he was home around the time everything went down."""
-trueorfalse("Pranav",test, evidence )
+def process_uploaded_file(content):
+    # Example processing: extract name, testimonial, and evidence from the file content
+    # This is just an example, adjust according to your file format
+    lines = content.split('\n')
+    name = lines[0]
+    testimonial = lines[1]
+    evidence = '\n'.join(lines[2:])
+
+    # Call trueorfalse function with extracted data
+    result = trueorfalse(name, testimonial, evidence)
+    
+    return result
+
+if __name__ == '__main__':
+    # Example usage
+    content = """Pranav
+    I live in the same building as James Morton. On the night of July 20, 2023, I saw him coming into the building around 8:20 PM. He looked tired and wasn’t in any kind of rush. We greeted each other like usual, and I went up to my apartment. Later, when I heard about the robbery, I was surprised to hear James’ name involved. I’m sure he was home around the time everything went down.
+    Case Title: State vs. James Morton Incident Date: July 20, 2023 Location: Luxe Jewelers, Downtown City 1. CCTV Footage - Description: CCTV footage from Luxe Jewelers captured on the night of"""
+    process_uploaded_file(content)

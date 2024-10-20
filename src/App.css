@@ -17,6 +17,10 @@ html, body {
   align-items: center;
 }
 
+button{
+  background-color: black;
+  color:white;
+}
 
 
 .content {
