@@ -14,8 +14,8 @@ from amazon_transcribe.model import TranscriptEvent
 import os
 
 os.environ['AWS_ACCESS_KEY_ID'] = os.getenv('AWS_ACCESS_KEY_ID')
-os.environ['AWS_SECRET_ACCESS_KEY'] = 'Yap24BM6wB5dvy1diDK+vdo8tO3Y61YGKCFjI3UD'
-os.environ['AWS_SESSION_TOKEN'] = 'IQoJb3JpZ2luX2VjEAMaCXVzLWVhc3QtMSJGMEQCIEr8MvWGKZs5UnuhpbYMMeIt+STOmQYs0zQPHurWt9ZIAiBohsIt0+NfW+siBJSwdChsv7j8h6c2cNW/9+TcvOpYOCqZAghsEAAaDDQ5MTAzMzA2OTM0NiIM66Dp8oPWixyCubqTKvYBE8+Y37feWNyLCZLp7KHZfBFGNBmdkLn9qEOSxNHaSHLl3f07U3Gz4Qumf4qzJQrQRdtS5WhGQIsl8Yj7ctWa0E32vN2J1NA8Ja9Fvh247o555EIXWq5QeKzVOS+uafexuUi0a85lxEi+mhl4DGYQNJnS4LE6CPdUsAhWanM3+jutVmgUapvlMR8F2VuOgQG7kM2QJeu+xlpI++9wZjHuKEQvr/RluSWX7CAjoIKJkQLiYN7W85Qqd8N0DXgkO74o9+uQ5ZdzDsf/TtJtR7pTOot2lL6mWxE2QwyyXVlaL935PEFqszqyJi1g7NHb8GsqgfKyg/AUMKnf0bgGOp4Bj8oqp4SoNyHyrgw87j1jLimpbTSNcNV5eaO8M+Naf4LXzuj7t8zZDjHG6DQcfsWAZjesnOlCNR5Q/4trcGqUjjQoiuLSljPTPN16tUMGOl8xEjW8WSK0007aYjshGmcMJpwBFp3Gv6WyrG4S+M2hsKrnUr5jkViVC7gZldhXzUmongjkLHj4z120PZ5wcGoq8zlgRhva+ELlota7jpY='  # Only if using temporary credentials
+os.environ['AWS_SECRET_ACCESS_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+os.environ['AWS_SESSION_TOKEN'] = ''  # Only if using temporary credentials
 
 class MyEventHandler(TranscriptResultStreamHandler):
     async def handle_transcript_event(self, transcript_event: TranscriptEvent):

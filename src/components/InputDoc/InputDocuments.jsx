@@ -16,26 +16,34 @@ const InputDocuments = () => {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('document', selectedFile);
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const text = e.target.result;
 
+            try {
+                const response = await axios.post('YOUR_BACKEND_ENDPOINT/llm', { text }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                console.log('File content sent successfully:', response.data);
+            } catch (error) {
+                console.error('Error sending file content:', error);
+            }
+        };
         try {
-            const response = await axios.post('YOUR_BACKEND_ENDPOINT', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            console.log('File uploaded successfully:', response.data);
+            reader.readAsText(selectedFile);
         } catch (error) {
-            console.error('Error uploading file:', error);
+            console.error('Error reading file:', error);
+            alert('Error reading file. Please try again.');
         }
     };
 
     return (
-        <div className="container">
-            <h2>Upload Document</h2>
+        <div className="container1">
+            <h2>Upload Evidence</h2>
             <form onSubmit={handleSubmit}>
-                <input type="file" onChange={handleFileChange} />
+                <input type="file" accept=".txt" onChange={handleFileChange} />
                 <button type="submit">Upload</button>
             </form>
         </div>

@@ -74,7 +74,7 @@ const StoC = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        // Handle file upload logic here
+        // Handle form submission logic here        
     };
 
     return (
