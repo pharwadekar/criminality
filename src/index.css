@@ -23,11 +23,15 @@ a:hover {
 }
 
 body {
+  height: 100%;
   margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #ff7e5f, #feb47b); /* Add a gradient background */
+  font-family: Arial, sans-serif; /* Set a default font family */
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
 
 h1 {
@@ -43,11 +47,13 @@ button {
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
+  color: #fff; /* Change text color to white for better contrast */
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
   border-color: #646cff;
+  border-color: #fff; 
 }
 button:focus,
 button:focus-visible {

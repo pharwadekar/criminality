@@ -1,0 +1,28 @@
+
+
+.chat-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 80%;
+    max-width: 600px;
+
+}
+
+.chat-container h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333333;
+}
+
+.transcript {
+    background-color: #f9f9f9;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    padding: 10px;
+    height: 300px;
+
+    font-size: 16px;
+    color: #555555;
+}
