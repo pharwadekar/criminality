@@ -6,8 +6,14 @@ import numpy as np
 import cv2
 import dlib
 from deepface import DeepFace
-import eventlet
 from collections import deque
+import asyncio
+import os
+import sounddevice as sd
+
+from amazon_transcribe.client import TranscribeStreamingClient
+from amazon_transcribe.handlers import TranscriptResultStreamHandler
+from amazon_transcribe.model import TranscriptEvent
 
 app = Flask(__name__)
 CORS(app)
@@ -158,6 +164,59 @@ def detect_blinking_eye_tracking_and_micro_expressions(frame):
 
     return frame, high_speed_blink, micro_expressions, face_orientation, gaze_direction
 
+os.environ['AWS_ACCESS_KEY_ID'] = 'ASIAXEU62A4RJMG7PQR4'
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'hOvkzaYfo6t9tBEDgRmfQII4Ogdn10Pipe2uTLI0'
+os.environ['AWS_SESSION_TOKEN'] = 'IQoJb3JpZ2luX2VjEBAaCXVzLWVhc3QtMSJIMEYCIQCetPHA7RTPqTgWkkmQjED5G3xyvNcdDCMKCXRKsmBIggIhAOPTO7PB1qYIQsepD+WUgtuYHygwT19bLRC0T0VTECM7KpkCCHkQABoMNDkxMDMzMDY5MzQ2IgwyU8neqfz83Aeijg8q9gGs6DEpmYAwt5Iu/AOFpfOVT0RbYWS9wbp262fy6kzw3umkgF75Hq1M5sjs/AgbSUk4o6NgE0mvKNK9ro+oaffDYgoWaerddHOp067+avpDbOv5xlyBMvpOuBnJcMcbFfZwxikbend/usyQtnexfvde/T7sC3uCR86wsvbInM+B7++dIXh1OQYA8fKDx8S7411gL8udP/+pOS+CfzJ3ngyTNKuBmB8UBJOrhCe6fSuVKL+d5hhBiMCDNx79aA/Q6DMg8Bh3tuVSgn3Cwgqlyg5WDz121AyiySRxab9P9IO8o5Ys8OgEsPviwyvHTa31lN0Yywhge2IwrsrUuAY6nAEJ1fBPoIQg4LE0PDsSaBkwNNReSNvROMflE97HQZSCz/6ZhY2ALF46Dnv7peHDVdSst6cPKAi5jrtEerzx871c+8J77mZlQm34o8RYAjPbARcg0nKHOzLzutzmaTvtYefJOL3zcNVGfALbs7/L0MJrXjl6qkL33UOjWd0I9cPqJsPogTWKI+gA6TVjfDg5unMqphzlAW36ucXdZEw='  # Only if using temporary credentials
+class MyEventHandler(TranscriptResultStreamHandler):
+    async def handle_transcript_event(self, transcript_event: TranscriptEvent):
+        results = transcript_event.transcript.results
+        for result in results:
+            for alt in result.alternatives:
+                if not result.is_partial:
+                    print(f"{alt.transcript}")
+                    socketio.emit('transcription', alt.transcript)
+
+async def mic_stream():
+    loop = asyncio.get_event_loop()
+    input_queue = asyncio.Queue()
+
+    def callback(indata, frame_count, time_info, status):
+        loop.call_soon_threadsafe(input_queue.put_nowait, (bytes(indata), status))
+
+    stream = sd.RawInputStream(
+        channels=1,
+        samplerate=16000,
+        callback=callback,
+        blocksize=1024 * 2,
+        dtype="int16",
+    )
+    with stream:
+        while True:
+            indata, status = await input_queue.get()
+            yield indata, status
+
+async def write_chunks(stream, audio_data):
+    await stream.input_stream.send_audio_event(audio_chunk=audio_data)
+    await stream.input_stream.end_stream()
+
+async def basic_transcribe(audio_data):
+    client = TranscribeStreamingClient(region="us-west-2")
+    stream = await client.start_stream_transcription(
+        language_code="en-US",
+        media_sample_rate_hz=16000,
+        media_encoding="pcm"
+    )
+    handler = MyEventHandler(stream.output_stream)
+    await asyncio.gather(write_chunks(stream, audio_data), handler.handle_events())
+
+@socketio.on('audio_chunk')
+def handle_audio_chunk(data):
+    print("Received audio chunk")
+    print(f"Audio chunk size: {len(data)} bytes")
+    # Process the audio chunk here
+    asyncio.run(basic_transcribe(data))
+    print("Started transcription process")
+
 @socketio.on('video_frame')
 def handle_video_frame(data):
     try:
@@ -175,10 +234,6 @@ def handle_video_frame(data):
         emotion_analysis = DeepFace.analyze(img, actions=['emotion'], enforce_detection=False)
         
         img, high_speed_blink, micro_expressions, face_orientation, gaze_direction = detect_blinking_eye_tracking_and_micro_expressions(img)
-
-        # Encode the processed image back to base64
-        _, buffer = cv2.imencode('.jpg', img)
-        processed_image = base64.b64encode(buffer).decode('utf-8')
 
         response = {
             'emotion': emotion_analysis[0]['dominant_emotion'],

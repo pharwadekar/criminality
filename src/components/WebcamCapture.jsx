@@ -1,11 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
 import Webcam from 'react-webcam';
+import { ReactMic } from 'react-mic';
 import io from 'socket.io-client';
 
 const socket = io('http://localhost:5173', {
   transports: ['websocket'],
   reconnectionAttempts: 3,
   reconnectionDelay: 1000,
+});
+
+socket.on('connect', () => {
+  console.log('Connected to server');
+});
+
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
 });
 
 const WebcamCapture = () => {
@@ -16,24 +25,10 @@ const WebcamCapture = () => {
   const [gazeDirection, setGazeDirection] = useState('');
   const [error, setError] = useState(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
+  const [record, setRecord] = useState(true);
+  const [transcript, setTranscript] = useState('');
 
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to server');
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server');
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Connection error:', err);
-    });
-
-    socket.on('reconnect_attempt', () => {
-      console.log('Reconnecting...');
-    });
-
     socket.on('analysis_result', (data) => {
       setEmotion(data.emotion);
       setHighSpeedBlink(data.high_speed_blink);
@@ -46,13 +41,14 @@ const WebcamCapture = () => {
       setError(data.error);
     });
 
+    socket.on('transcription', (data) => {
+      setTranscript(data);
+    });
+
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('connect_error');
-      socket.off('reconnect_attempt');
       socket.off('analysis_result');
       socket.off('analysis_error');
+      socket.off('transcription');
     };
   }, []);
 
@@ -68,6 +64,27 @@ const WebcamCapture = () => {
     } else {
       console.error('Webcam reference is null or webcam is not active');
     }
+  };
+
+  const startRecording = () => {
+    setRecord(true);
+    console.log('Recording started');
+  };
+
+  const stopRecording = () => {
+    setRecord(false);
+    console.log('Recording stopped');
+  };
+
+  const onData = (recordedBlob) => {
+    console.log('chunk of real-time data is: ', recordedBlob);
+    socket.emit('audio_chunk', recordedBlob);
+    console.log('Sent audio chunk to backend');
+  };
+
+  const onStop = (recordedBlob) => {
+    console.log('recordedBlob is: ', recordedBlob);
+    // No need to emit the entire blob at once
   };
 
   useEffect(() => {
@@ -100,11 +117,25 @@ const WebcamCapture = () => {
           setIsWebcamActive(false);
         }}
       />
+      <ReactMic
+        record={record}
+        className="sound-wave"
+        onStop={onStop}
+        onData={onData}
+        strokeColor="#000000"
+        backgroundColor="#FF4081"
+      />
+      <div>
+      <button onClick={startRecording} type="button">Show Frequency</button>
+      <button onClick={stopRecording} type="button">Stop Frequency</button>
+      </div>
+      <div>
       {emotion && <p>Emotion: {emotion}</p>}
       {highSpeedBlink && <p>High-Speed Blink Detected!</p>}
       {microExpressions.length > 0 && <p>Micro Expressions: {microExpressions.join(', ')}</p>}
       {gazeDirection && <p>Gaze Direction: {gazeDirection}</p>}
       {error && <p>Error: {error}</p>}
+      </div>
     </div>
   );
 };

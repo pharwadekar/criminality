@@ -1,93 +1,53 @@
-import React, { useState, useEffect } from 'react';
-// import AWS from 'aws-sdk/global';
-// import TranscribeService from 'aws-sdk/clients/transcribeservice';
+import React, { useState } from 'react';
 
 const StoC = () => {
-//     const [transcript, setTranscript] = useState('');
-    
-//     if (typeof window !== 'undefined' && !window.global) {
-//         window.global = window;
-//     }
+  // Step 1: Initialize state for transcribed text
+  const [transcript, setTranscript] = useState('');
 
-//     useEffect(() => {
-//         // Configure AWS SDK
-//         AWS.config.update({
-//             region: 'us-west-2' // Change to your region
-//         });
+  // Step 2: Create a function to start speech recognition
+  const startRecognition = () => {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-//         AWS.config.credentials = new AWS.Credentials(
-//             process.env.REACT_APP_AWS_ACCESS_KEY_ID, // Replace with your access key
-//             process.env.REACT_APP_AWS_SECRET_ACCESS_KEY // Replace with your secret key
-//         );
-//         // Ensure the environment variables are loaded
-//         if (!process.env.REACT_APP_AWS_ACCESS_KEY_ID || !process.env.REACT_APP_AWS_SECRET_ACCESS_KEY) {
-//             console.error('AWS credentials are not set in the environment variables.');
-//             return;
-//         }
-        
-
-//         const transcribeService = new AWS.TranscribeService();
-
-//         const params = {
-//             LanguageCode: 'en-US', // Change to your language code
-//             MediaFormat: 'mp3', // Change to your media format
-//             Media: {
-//                 MediaFileUri: '' // Replace with your media file URI
-//             },
-//             TranscriptionJobName: 'TranscriptionJob' // Change to your job name
-//         };
-
-//         transcribeService.startTranscriptionJob(params, (err, data) => {
-//             if (err) console.log(err, err.stack);
-//             else {
-//                 const jobName = data.TranscriptionJob.TranscriptionJobName;
-//                 const checkStatus = setInterval(() => {
-//                     transcribeService.getTranscriptionJob({ TranscriptionJobName: jobName }, (err, data) => {
-//                         if (err) console.log(err, err.stack);
-//                         else {
-//                             if (data.TranscriptionJob.TranscriptionJobStatus === 'COMPLETED') {
-//                                 clearInterval(checkStatus);
-//                                 fetch(data.TranscriptionJob.Transcript.TranscriptFileUri)
-//                                     .then(response => response.json())
-//                                     .then(data => setTranscript(data.results.transcripts[0].transcript));
-//                             }
-//                         }
-//                     });
-//                 }, 5000);
-//             }
-//         });
-//     }, []);
-
-//     return (
-//         <div className="chat-container">
-//             <h2>Live Transcript</h2>
-//             <div className="transcript">
-//                 {transcript}
-//             </div>
-//         </div>
-//     );
-    const [transcript, setTranscript] = useState('');
-
-    const handleFileChange = (event) => {
-        // Handle file change logic here
+    recognition.onstart = () => {
+      console.log('Speech recognition started');
     };
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Handle file upload logic here
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcriptPart = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          setTranscript((prevTranscript) => prevTranscript + transcriptPart);
+        } else {
+          interimTranscript += transcriptPart;
+        }
+      }
+      console.log('Interim Transcript:', interimTranscript);
     };
 
-    return (
-        <div className="container">
-            <div className="chat-container">
-                <h2>Live Transcript</h2>
-                <div className="transcript">
-                    {transcript}
-                </div>
-            </div>
-        </div>
-    );
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+    };
 
+    recognition.onend = () => {
+      console.log('Speech recognition ended');
+    };
+
+    recognition.start();
+  };
+
+  return (
+    <div>
+      {/* Step 5: Render button to start speech recognition */}
+      <button onClick={startRecognition}>Start Recognition</button>
+      
+      {/* Display the transcribed text */}
+      <p>Transcription: {transcript}</p>
+    </div>
+  );
 };
 
 export default StoC;
